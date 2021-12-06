@@ -167,6 +167,28 @@ public class FunctionSignatureNodeTests {
         Assert.assertEquals(returnTypeNode.type().toString(), "string[]|error");
     }
 
+    @Test(description = "Test unsupported nested array type query parameter generation",
+            expectedExceptions = BallerinaOpenApiException.class,
+            expectedExceptionsMessageRegExp = "Unsupported parameter type is found in the parameter : .*")
+    public void testNestedArrayQueryParamGeneration() throws IOException, BallerinaOpenApiException {
+        OpenAPI openAPI = getOpenAPI(RESDIR.resolve("swagger/invalid_array_query_params.yaml"));
+        FunctionSignatureGenerator functionSignatureGenerator = new FunctionSignatureGenerator(openAPI,
+                new BallerinaTypesGenerator(openAPI), new ArrayList<>());
+        functionSignatureGenerator.getFunctionSignatureNode(openAPI.getPaths()
+                .get("/pets").getGet(), new ArrayList<>());
+    }
+
+    @Test(description = "Test generation of array type query parameter when type of the parameter not given",
+            expectedExceptions = BallerinaOpenApiException.class,
+            expectedExceptionsMessageRegExp = "Please define the type of the parameter : .*")
+    public void testArrayQueryParamWithNoTypeGeneration() throws IOException, BallerinaOpenApiException {
+        OpenAPI openAPI = getOpenAPI(RESDIR.resolve("swagger/invalid_array_query_params.yaml"));
+        FunctionSignatureGenerator functionSignatureGenerator = new FunctionSignatureGenerator(openAPI,
+                new BallerinaTypesGenerator(openAPI), new ArrayList<>());
+        functionSignatureGenerator.getFunctionSignatureNode(openAPI.getPaths()
+                .get("/dogs").getGet(), new ArrayList<>());
+    }
+
     @AfterTest
     private void deleteGeneratedFiles() {
         try {
