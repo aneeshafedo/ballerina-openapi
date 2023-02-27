@@ -254,14 +254,17 @@ public class OpenAPIComponentMapper {
             RecordFieldSymbol> rfields, HashSet<String> unionKeys, Map<String, String> apiDocs) {
 
         // Map to allOF need to check the status code inclusion there
+        List<Schema<?>> referenceSchemaList = new ArrayList<>();
         ComposedSchema allOfSchema = new ComposedSchema();
         // Set schema
+
+        // TODO : need to check the order of the record fields and typeInclusions
         List<Schema> allOfSchemaList = new ArrayList<>();
         for (TypeSymbol typeInclusion : typeInclusions) {
             Schema<?> referenceSchema = new Schema();
             String typeInclusionName = typeInclusion.getName().orElseThrow();
             referenceSchema.set$ref(ConverterCommonUtils.unescapeIdentifier(typeInclusionName));
-            allOfSchemaList.add(referenceSchema);
+            referenceSchemaList.add(referenceSchema);
             if (typeInclusion.typeKind().equals(TypeDescKind.TYPE_REFERENCE)) {
                 TypeReferenceTypeSymbol typeRecord = (TypeReferenceTypeSymbol) typeInclusion;
                 if (typeRecord.typeDescriptor() instanceof RecordTypeSymbol) {
@@ -281,7 +284,10 @@ public class OpenAPIComponentMapper {
                         equals(ConverterCommonUtils.unescapeIdentifier(key))).forEach(key ->
                 filteredField.put(ConverterCommonUtils.unescapeIdentifier(key1), value)));
         ObjectSchema objectSchema = generateObjectSchemaFromRecordFields(schema, null, filteredField, apiDocs);
+
+        allOfSchemaList.addAll(referenceSchemaList);
         allOfSchemaList.add(objectSchema);
+
         allOfSchema.setAllOf(allOfSchemaList);
         if (schema != null && !schema.containsKey(componentName)) {
             // Set properties for the schema
